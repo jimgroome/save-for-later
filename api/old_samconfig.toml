@@ -1,0 +1,11 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "taptrack"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1l7lobvgqfsq3"
+s3_prefix = "taptrack"
+region = "eu-west-2"
+profile = "windmill"
+capabilities = "CAPABILITY_IAM"
+

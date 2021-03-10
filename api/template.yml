@@ -1,0 +1,265 @@
+Description: "Microservice API and Auth settings"
+Transform: "AWS::Serverless-2016-10-31"
+Globals:
+  Api:
+    Cors:
+      AllowMethods: "'*'"
+      AllowHeaders: "'*'"
+      AllowOrigin: "'*'"
+  Function:
+    Environment:
+      Variables:
+        REGION: eu-west-2
+        TABLE_NAME: !Ref SaveForLaterTable
+Resources:
+  SaveForLaterUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+      UserPoolName: SaveForLaterUsers
+      UsernameAttributes:
+      - email
+      AutoVerifiedAttributes:
+      - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 6
+          RequireLowercase: true
+          RequireNumbers: false
+          RequireSymbols: false
+          RequireUppercase: true
+  SaveForLaterUserPoolTokenClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref SaveForLaterUserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+      - USER_PASSWORD_AUTH
+  # UserPoolUser:
+  #   Type: AWS::Cognito::UserPoolUser
+  #   Properties:
+  #     DesiredDeliveryMediums:
+  #       - EMAIL
+  #     Username: !Ref YourEmail
+  #     UserPoolId: !Ref UserPool
+
+  # You don't actually need the API, but it does allow you to centralize your auth config, and allows you to add an Open API Spec
+  SaveForLaterApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: SaveForLaterApi
+      StageName: v1
+      # This is only needed if you are Requesting from a domain that is not shared with this API Domain
+      # Know the security implications before doing this on a production site
+      Cors:
+        AllowMethods: "'*'"
+        AllowHeaders: "'*'"
+        AllowOrigin: "'*'"
+      # Auth:
+      #   Authorizers:
+      #     CognitoAuthorizer:
+      #       UserPoolArn: !GetAtt "SaveForLaterUserPool.Arn"
+
+  SaveForLaterLinks:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Manages links (must be authenticated)
+      Runtime: nodejs12.x
+      MemorySize: 128
+      Timeout: 100
+      Handler: src/links/app.links
+      Policies:
+        - AmazonDynamoDBFullAccess
+        # Leaving this here so you can avoid the Gotcha.  Whatever this function does, it must be given permission to do so.
+        # Check here: https://github.com/awslabs/serverless-application-model/blob/master/docs/policy_templates.rst
+      Events:
+        Get:
+          Type: Api
+          Properties:
+            Path: /links/
+            RestApiId: !Ref SaveForLaterApi
+            Method: GET
+            # Auth:
+            #   Authorizer: CognitoAuthorizer
+        Post:
+          Type: Api
+          Properties:
+            Path: /links/
+            RestApiId: !Ref SaveForLaterApi
+            Method: POST
+            # Auth:
+            #   Authorizer: CognitoAuthorizer
+        Delete:
+          Type: Api
+          Properties:
+            Path: /links/{id}
+            RestApiId: !Ref SaveForLaterApi
+            Method: DELETE
+            # Auth:
+            #   Authorizer: CognitoAuthorizer
+  # TapTrackAdminGetPlaceDetails:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     Description: Gets place details for admins (must be authenticated)
+  #     Runtime: nodejs12.x
+  #     MemorySize: 128
+  #     Timeout: 100
+  #     Handler: src/handlers/admin/app.getPlace
+  #     Policies:
+  #       - AmazonDynamoDBFullAccess
+  #       # Leaving this here so you can avoid the Gotcha.  Whatever this function does, it must be given permission to do so.
+  #       # Check here: https://github.com/awslabs/serverless-application-model/blob/master/docs/policy_templates.rst
+  #     Events:
+  #       Get:
+  #         Type: Api
+  #         Properties:
+  #           Path: /admin/
+  #           RestApiId: !Ref TapTrackApi
+  #           Method: GET
+  #           Auth:
+  #             Authorizer: CognitoAuthorizer
+
+  # TapTrackAdminGetDashboard:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     Description: Gets dashboard data for admins (must be authenticated)
+  #     Runtime: nodejs12.x
+  #     MemorySize: 128
+  #     Timeout: 100
+  #     Handler: src/handlers/admin/app.getDashboard
+  #     Policies:
+  #       - AmazonDynamoDBFullAccess
+  #       # Leaving this here so you can avoid the Gotcha.  Whatever this function does, it must be given permission to do so.
+  #       # Check here: https://github.com/awslabs/serverless-application-model/blob/master/docs/policy_templates.rst
+  #     Events:
+  #       Get:
+  #         Type: Api
+  #         Properties:
+  #           Path: /admin/dashboard
+  #           RestApiId: !Ref TapTrackApi
+  #           Method: GET
+  #           Auth:
+  #             Authorizer: CognitoAuthorizer
+
+  # TapTrackAdminUpdateProducts:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     Description: Updates place's products (must be authenticated)
+  #     Runtime: nodejs12.x
+  #     MemorySize: 128
+  #     Timeout: 100
+  #     Handler: src/handlers/admin/app.updateProducts
+  #     Policies:
+  #       - AmazonDynamoDBFullAccess
+  #       # Leaving this here so you can avoid the Gotcha.  Whatever this function does, it must be given permission to do so.
+  #       # Check here: https://github.com/awslabs/serverless-application-model/blob/master/docs/policy_templates.rst
+  #     Events:
+  #       Get:
+  #         Type: Api
+  #         Properties:
+  #           Path: /admin/products/
+  #           RestApiId: !Ref TapTrackApi
+  #           Method: POST
+  #           Auth:
+  #             Authorizer: CognitoAuthorizer
+  # TapTrackAdminUpdateBranding:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     Description: Updates place's branding (must be authenticated)
+  #     Runtime: nodejs12.x
+  #     MemorySize: 128
+  #     Timeout: 100
+  #     Handler: src/handlers/admin/app.updateBranding
+  #     Policies:
+  #       - AmazonDynamoDBFullAccess
+  #       # Leaving this here so you can avoid the Gotcha.  Whatever this function does, it must be given permission to do so.
+  #       # Check here: https://github.com/awslabs/serverless-application-model/blob/master/docs/policy_templates.rst
+  #     Events:
+  #       Get:
+  #         Type: Api
+  #         Properties:
+  #           Path: /admin/branding/
+  #           RestApiId: !Ref TapTrackApi
+  #           Method: POST
+  #           Auth:
+  #             Authorizer: CognitoAuthorizer
+  # TapTrackAdminUpdateSocial:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     Description: Updates place's branding (must be authenticated)
+  #     Runtime: nodejs12.x
+  #     MemorySize: 128
+  #     Timeout: 100
+  #     Handler: src/handlers/admin/app.updateSocial
+  #     Policies:
+  #       - AmazonDynamoDBFullAccess
+  #       # Leaving this here so you can avoid the Gotcha.  Whatever this function does, it must be given permission to do so.
+  #       # Check here: https://github.com/awslabs/serverless-application-model/blob/master/docs/policy_templates.rst
+  #     Events:
+  #       Get:
+  #         Type: Api
+  #         Properties:
+  #           Path: /admin/social/
+  #           RestApiId: !Ref TapTrackApi
+  #           Method: POST
+  #           Auth:
+  #             Authorizer: CognitoAuthorizer
+  # TapTrackClientGetPlaceDetails:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     Description: Gets place details for customers (don't need to be logged in)
+  #     Handler: src/handlers/client/app.getPlaceDetails
+  #     Runtime: nodejs12.x
+  #     MemorySize: 128
+  #     Timeout: 100
+  #     Policies:
+  #       - AmazonDynamoDBFullAccess
+  #       # Leaving this here so you can avoid the Gotcha.  Whatever this function does, it must be given permission to do so.
+  #       # Check here: https://github.com/awslabs/serverless-application-model/blob/master/docs/policy_templates.rst
+  #     Events:
+  #       Get:
+  #         Type: Api
+  #         Properties:
+  #           Path: /client
+  #           RestApiId: !Ref SaveForLaterApi
+  #           Method: GET
+  # TapTrackClientNewTrackTrace:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     Description: Inserts a new track and trace record (don't need to be logged in)
+  #     Handler: src/handlers/client/app.newTrackTrace
+  #     Runtime: nodejs12.x
+  #     MemorySize: 128
+  #     Timeout: 100
+  #     Policies:
+  #       - AmazonDynamoDBFullAccess
+  #       # Leaving this here so you can avoid the Gotcha.  Whatever this function does, it must be given permission to do so.
+  #       # Check here: https://github.com/awslabs/serverless-application-model/blob/master/docs/policy_templates.rst
+  #     Events:
+  #       Get:
+  #         Type: Api
+  #         Properties:
+  #           Path: /client/track-trace
+  #           RestApiId: !Ref TapTrackApi
+  #           Method: POST
+  SaveForLaterTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: uuid
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 2
+        WriteCapacityUnits: 2
+      TableName: SaveForLaterTable
+Outputs:
+  CognitoID:
+    Description: The Cognito UserPool ID
+    Value: !Ref SaveForLaterUserPool
+  CognitoClientID:
+    Description: The Cognito UserPool Client ID
+    Value: !Ref SaveForLaterUserPoolTokenClient
+  ApiUrl:
+    Description: The API URL
+    Value: !Sub "https://${SaveForLaterApi}.execute-api.${AWS::Region}.amazonaws.com/v1"

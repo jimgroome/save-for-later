@@ -1,0 +1,11 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "save-for-later"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1xzsbsrhor33g"
+s3_prefix = "save-for-later"
+region = "eu-west-2"
+profile = "windmill"
+capabilities = "CAPABILITY_IAM"
+

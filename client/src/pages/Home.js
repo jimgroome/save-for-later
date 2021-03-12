@@ -1,86 +1,122 @@
+import {
+  MDBBtn,
+  MDBCol,
+  MDBContainer,
+  MDBIcon,
+  MDBModal,
+  MDBModalBody,
+  MDBModalFooter,
+  MDBModalHeader,
+  MDBRow,
+} from "mdbreact";
 import React, { useEffect, useState } from "react";
-import config from "../config";
+import Links from "../components/Links";
+import apiGatewayCall from "../helpers/apiGatewayCall";
 
-const Home = () => {
+const Home = ({ setLoading, onLogoutClick }) => {
   const [activeLinks, setActiveLinks] = useState(null);
   const [archivedLinks, setArchivedLinks] = useState(null);
-  // const [links, setLinks] = useState(null);
+
+  const [linkToDelete, setLinkToDelete] = useState(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+
   useEffect(() => {
     getLinks();
+    // eslint-disable-next-line
   }, []);
 
   const getLinks = async () => {
-    await fetch(config.apiRoot + "links")
-      .then((response) => response.json())
+    setLoading(true);
+    await apiGatewayCall("links", "get")
       .then((data) => {
         setActiveLinks(data.active);
         setArchivedLinks(data.archived);
-        // setLinks(data);
+        setLoading(false);
       })
-      .catch((e) => console.log(e));
+      .catch((e) => {
+        setLoading(false);
+        console.log(e);
+      });
   };
-  const onDelete = async (e, id) => {
+  const onDelete = async (e) => {
     e.preventDefault();
-    await fetch(config.apiRoot + "links/" + id, { method: "DELETE" })
-      .then(async () => await getLinks())
-      .catch((e) => console.log(e));
+    setLoading(true);
+    await apiGatewayCall(`links/${linkToDelete}`, "del")
+      .then(async () => {
+        setDeleteModalOpen(false);
+        setLoading(false);
+        await getLinks();
+      })
+      .catch((e) => {
+        setLoading(false);
+        console.log(e);
+      });
+  };
+  const onDeleteClick = (e, id) => {
+    e.preventDefault();
+    setDeleteModalOpen(true);
+    setLinkToDelete(id);
+  };
+  const toggleDeleteModal = () => {
+    setDeleteModalOpen(!deleteModalOpen);
   };
   return (
-    <div className="container-fluid">
-      <div className="row">
-        <div className="col">
-          <h1>Saved links</h1>
-        </div>
-      </div>
-      <div className="row">
-        <div className="col">
-          {activeLinks ? (
-            activeLinks.length > 0 ? (
-              <table className="table">
-                <tbody>
-                  {activeLinks.map((link) => (
-                    <tr key={link.uuid}>
-                      <td>
-                        <a href={link.url} target="_blank" rel="noreferrer">
-                          {link.title}
-                        </a>
-                      </td>
-                      <td className="text-right">
-                        <button onClick={(e) => onDelete(e, link.uuid)} className="btn btn-danger">X</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+    <MDBContainer fluid>
+      <MDBRow>
+        <MDBCol>
+          <h1>
+            Saved links
+            <MDBBtn color="primary" onClick={(e) => getLinks()} className="float-right">
+              <MDBIcon icon="sync" />
+            </MDBBtn>
+          </h1>
+        </MDBCol>
+      </MDBRow>
+      <MDBRow>
+        <MDBCol>
+          {activeLinks &&
+            (activeLinks.length > 0 ? (
+              <Links links={activeLinks} onDeleteClick={onDeleteClick} />
             ) : (
               <p>Nothing found</p>
-            )
-          ) : (
-            <p>Loading...</p>
-          )}
-          {archivedLinks && archivedLinks.length > 0 && (
-            <>
-              <h2>Archived links</h2>
-              <div className="table-responsive">
-                <table className="table">
-                  <tbody>
-                    {archivedLinks.map((link) => (
-                      <tr key={link.uuid}>
-                        <td>
-                          <a href={link.url} target="_blank" rel="noreferrer">
-                            {link.title}
-                          </a>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
+            ))}
+        </MDBCol>
+      </MDBRow>
+      {archivedLinks && archivedLinks.length > 0 && (
+        <MDBRow>
+          <MDBCol>
+            <h2>Archived links</h2>
+            <Links links={archivedLinks} onDeleteClick={onDeleteClick} />
+          </MDBCol>
+        </MDBRow>
+      )}
+      <MDBModal toggle={toggleDeleteModal} isOpen={deleteModalOpen} fade={false}>
+        <MDBModalHeader>Confirm archive</MDBModalHeader>
+        <MDBModalBody>Archive this link?</MDBModalBody>
+        <MDBModalFooter>
+          <MDBBtn
+            color="secondary"
+            onClick={(e) => {
+              e.preventDefault();
+              setLinkToDelete(null);
+              toggleDeleteModal();
+            }}
+          >
+            Cancel
+          </MDBBtn>
+          <MDBBtn color="danger" onClick={(e) => onDelete(e)}>
+            OK
+          </MDBBtn>
+        </MDBModalFooter>
+      </MDBModal>
+      <MDBRow>
+        <MDBCol>
+          <MDBBtn color="danger" onClick={(e) => onLogoutClick(e)} className="my-4">
+            Log out
+          </MDBBtn>
+        </MDBCol>
+      </MDBRow>
+    </MDBContainer>
   );
 };
 

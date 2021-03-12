@@ -1,32 +1,59 @@
-import React from "react";
-import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+import Header from "./components/Header";
+import LoadingIcon from "./components/LoadingIcon";
+import Login from "./components/Login";
 import Add from "./pages/Add";
 import Home from "./pages/Home";
+import toast, { Toaster } from "react-hot-toast";
+import Auth from "@aws-amplify/auth";
 
 function App() {
+  useEffect(() => {
+    const getCurrentSession = async () => {
+      await Auth.currentSession()
+        .then(() => {
+          setAuthenticated(true);
+          setLoading(false);
+        })
+        .catch((e) => {
+          setLoading(false);
+        });
+    };
+    setLoading(true);
+    getCurrentSession();
+    // eslint-disable-next-line
+  }, []);
+  const [loading, setLoading] = useState(false);
+  const [authenticated, setAuthenticated] = useState(false);
+
+  const onLogoutClick = async (e) => {
+    e.preventDefault();
+    await Auth.signOut()
+      .then(() => {
+        toast.success("You have successfully signed out.");
+        setAuthenticated(false);
+      })
+      .catch((e) => console.log(e));
+  };
+
   return (
     <Router>
-      <nav className="navbar navbar-expand-lg navbar-light bg-light sticky-top mb-4">
-        <Link to="/" className="navbar-brand">
-          Save for later
-        </Link>
-        <ul className="navbar-nav ml-auto">
-          <li className="nav-item">
-            <Link to="/add" className="nav-link">
-              +
-            </Link>
-          </li>
-        </ul>
-      </nav>
-
-      <Switch>
-        <Route exact path="/">
-          <Home />
-        </Route>
-        <Route exact path="/add">
-          <Add />
-        </Route>
-      </Switch>
+      {loading && <LoadingIcon />}
+      <Toaster />
+      <Header authenticated={authenticated} />
+      {authenticated ? (
+        <Switch>
+          <Route exact path="/">
+            <Home setLoading={setLoading} onLogoutClick={onLogoutClick} />
+          </Route>
+          <Route exact path="/add">
+            <Add setLoading={setLoading} />
+          </Route>
+        </Switch>
+      ) : (
+        <Login setAuthenticated={setAuthenticated} />
+      )}
     </Router>
   );
 }

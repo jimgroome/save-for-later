@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import config from "../config";
+import apiGatewayCall from "../helpers/apiGatewayCall";
 
-const Add = () => {
+const Add = ({ setLoading }) => {
   const parsedUrl = new URL(window.location.toString());
 
   const [title, setTitle] = useState(() => {
@@ -16,19 +16,17 @@ const Add = () => {
     return _url;
   });
 
-  const [loading, setLoading] = useState(false);
-
   const onSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    await fetch(config.apiRoot + "links/", { method: "POST", body: JSON.stringify({ url: url, title: title }) })
+    await apiGatewayCall("links", "post", { body: { url: url, title: title } })
       .then(() => {
-        window.close();
         setLoading(false);
+        window.close();
       })
       .catch((e) => {
-        console.log(e);
         setLoading(false);
+        console.log(e);
       });
   };
   return (
@@ -64,8 +62,6 @@ const Add = () => {
           </form>
         </div>
       </div>
-      {/* <p>Title: {parsedUrl.searchParams.get("title")}</p>
-      <p>URL: {parsedUrl.searchParams.get("text")}</p> */}
     </div>
   );
 };

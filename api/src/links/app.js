@@ -6,43 +6,52 @@ const docClient = new dynamodb.DocumentClient({
 });
 
 exports.links = async (event, context) => {
-  let returnValues = { statusCode: 501 };
-  switch (event.httpMethod) {
-    case "GET":
-      const links = await getLinks();
-      if (links) {
-        let activeLinks = [];
-        let archivedLinks = [];
-        links.forEach((link) => {
-          if (link.status === "archived") archivedLinks.push(link);
-          else activeLinks.push(link);
-        });
-        returnValues = { statusCode: 200, body: JSON.stringify({ active: activeLinks, archived: archivedLinks }) };
-      }
+  let returnValues = { statusCode: 401 };
+  const userId = getUserId(event);
+  if (userId) {
+    switch (event.httpMethod) {
+      case "GET":
+        const links = await getLinks(userId);
+        if (links) {
+          let activeLinks = [];
+          let archivedLinks = [];
+          links.forEach((link) => {
+            if (link.status === "archived") archivedLinks.push(link);
+            else activeLinks.push(link);
+          });
+          returnValues = { statusCode: 200, body: JSON.stringify({ active: activeLinks, archived: archivedLinks }) };
+        }
 
-      break;
+        break;
 
-    case "POST":
-      if (await insertLink(event, context)) returnValues.statusCode = 201;
-      break;
+      case "POST":
+        if (await insertLink(event, context, userId)) returnValues.statusCode = 201;
+        break;
 
-    case "DELETE":
-      if (await deleteLink(event)) returnValues.statusCode = 200;
-      break;
+      case "DELETE":
+        if (await archiveLink(event)) returnValues.statusCode = 200;
+        break;
 
-    default:
-      break;
+      default:
+        break;
+    }
   }
 
   returnValues.headers = { "Access-Control-Allow-Origin": "*" };
   return returnValues;
 };
 
-const getLinks = async () => {
+const getLinks = async (userId) => {
   let links = [];
 
   await docClient
-    .scan({ TableName: process.env.TABLE_NAME })
+    .query({
+      TableName: process.env.TABLE_NAME,
+      IndexName: "userId-created-index",
+      KeyConditionExpression: "#userId = :userId",
+      ExpressionAttributeNames: { "#userId": "userId" },
+      ExpressionAttributeValues: { ":userId": userId },
+    })
     .promise()
     .then((response) => (links = response.Items))
     .catch((e) => {
@@ -54,8 +63,9 @@ const getLinks = async () => {
 
   return links;
 };
-const insertLink = async (event, context) => {
+const insertLink = async (event, context, userId) => {
   const body = JSON.parse(event.body);
+  console.log(body);
   const currentDateTime = new Date();
   let response = false;
   await docClient
@@ -67,6 +77,7 @@ const insertLink = async (event, context) => {
         title: body.title,
         created: currentDateTime.toISOString(),
         status: "active",
+        userId: userId,
       },
     })
     .promise()
@@ -78,7 +89,7 @@ const insertLink = async (event, context) => {
     });
   return response;
 };
-const deleteLink = async (event) => {
+const archiveLink = async (event) => {
   let response = false;
   if ("id" in event.pathParameters) {
     await docClient
@@ -115,4 +126,13 @@ const sortArrayOfObjectsByKey = (array, field, ascending = true) => {
       return x > y ? -1 : x < y ? 1 : 0;
     }
   });
+};
+const getUserId = (event) => {
+  let userId;
+  if ("authorizer" in event.requestContext) {
+    userId = event.requestContext.authorizer.claims.sub;
+  } else {
+    userId = "c7249ceb-7494-47b2-b9a6-6ace630746f8";
+  }
+  return userId;
 };

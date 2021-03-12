@@ -1,0 +1,1 @@
+clear && sam build && sam deploy --profile windmill && rm -rf .aws-sam

@@ -1,25 +1,23 @@
 // import { MDBBtn, MDBIcon } from "mdbreact";
+import { MDBBtn, MDBIcon } from "mdbreact";
 import React from "react";
 import { Link } from "react-router-dom";
 
-const Header = ({ authenticated }) => {
+const Header = ({ variant = "logged-out", onSettingsClick = null }) => {
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-light sticky-top mb-4">
       <Link to="/" className="navbar-brand">
         Save for later
       </Link>
-      {/* {authenticated && (
+      {variant === "home" && (
         <ul className="navbar-nav ml-auto">
           <li className="nav-item">
-            <Link to="/add" className="nav-link">
-              <MDBBtn color="primary">
-                <MDBIcon icon="plus" className="mr-2" />
-                Add
-              </MDBBtn>
-            </Link>
+            <MDBBtn color="primary" onClick={() => onSettingsClick()}>
+              <MDBIcon icon="cog" />
+            </MDBBtn>
           </li>
         </ul>
-      )} */}
+      )}
     </nav>
   );
 };

@@ -14,7 +14,7 @@ import ArchivedLinks from "../components/ArchivedLinks";
 import Links from "../components/Links";
 import apiGatewayCall from "../helpers/apiGatewayCall";
 
-const Home = ({ setLoading, onLogoutClick }) => {
+const Home = ({ setLoading }) => {
   const [syncing, setSyncing] = useState(false);
 
   const [activeLinks, setActiveLinks] = useState(null);
@@ -105,17 +105,6 @@ const Home = ({ setLoading, onLogoutClick }) => {
           </MDBBtn>
         </MDBModalFooter>
       </MDBModal>
-      <MDBRow>
-        <MDBCol>
-          <MDBBtn
-            color="danger"
-            onClick={(e) => onLogoutClick(e)}
-            className={activeLinks && activeLinks.length ? "mb-4" : "my-4"}
-          >
-            Log out
-          </MDBBtn>
-        </MDBCol>
-      </MDBRow>
     </MDBContainer>
   );
 };

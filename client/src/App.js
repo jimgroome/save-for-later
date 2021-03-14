@@ -7,6 +7,7 @@ import Add from "./pages/Add";
 import Home from "./pages/Home";
 import toast, { Toaster } from "react-hot-toast";
 import Auth from "@aws-amplify/auth";
+import Settings from "./components/Settings";
 
 function App() {
   useEffect(() => {
@@ -14,46 +15,65 @@ function App() {
       await Auth.currentSession()
         .then(() => {
           setAuthenticated(true);
-          // setSyncing(false);
         })
         .catch((e) => {
-          // setSyncing(false);
           console.log(e);
         });
     };
-    // setSyncing(true);
     getCurrentSession();
     // eslint-disable-next-line
   }, []);
   const [loading, setLoading] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
 
   const onLogoutClick = async (e) => {
     e.preventDefault();
     await Auth.signOut()
       .then(() => {
         toast.success("You have successfully signed out.");
+        setSettingsModalOpen(false);
         setAuthenticated(false);
       })
       .catch((e) => console.log(e));
+  };
+
+  const onSettingsClick = () => {
+    setSettingsModalOpen(true);
+  };
+
+  const onSettingsSave = () => {
+    toast.success("Settings saved");
+    setSettingsModalOpen(false);
   };
 
   return (
     <Router>
       {loading && <LoadingIcon />}
       <Toaster />
-      <Header authenticated={authenticated} />
+
       {authenticated ? (
         <Switch>
           <Route exact path="/">
-            <Home setLoading={setLoading} onLogoutClick={onLogoutClick} />
+            <Header variant="home" onSettingsClick={onSettingsClick} />
+            <Home setLoading={setLoading} />
+            <Settings
+              settingsModalOpen={settingsModalOpen}
+              setSettingsModalOpen={setSettingsModalOpen}
+              onSettingsSave={onSettingsSave}
+              onLogoutClick={onLogoutClick}
+            />
           </Route>
           <Route exact path="/add">
+            <Header variant="add" />
             <Add setLoading={setLoading} />
           </Route>
         </Switch>
       ) : (
-        <Login setAuthenticated={setAuthenticated} />
+        <>
+          <Header variant="logged-out" />
+          <Login setAuthenticated={setAuthenticated} />
+        </>
       )}
     </Router>
   );

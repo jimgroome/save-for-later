@@ -98,6 +98,51 @@ Resources:
             Method: DELETE
             Auth:
               Authorizer: CognitoAuthorizer
+  SaveForLaterLists:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Manages lists (must be authenticated)
+      Runtime: nodejs12.x
+      MemorySize: 128
+      Timeout: 100
+      Handler: src/links/app.lists
+      Policies:
+        - AmazonDynamoDBFullAccess
+        # Leaving this here so you can avoid the Gotcha.  Whatever this function does, it must be given permission to do so.
+        # Check here: https://github.com/awslabs/serverless-application-model/blob/master/docs/policy_templates.rst
+      Events:
+        Get:
+          Type: Api
+          Properties:
+            Path: /lists/
+            RestApiId: !Ref SaveForLaterApi
+            Method: GET
+            Auth:
+              Authorizer: CognitoAuthorizer
+        Post:
+          Type: Api
+          Properties:
+            Path: /lists/
+            RestApiId: !Ref SaveForLaterApi
+            Method: POST
+            Auth:
+              Authorizer: CognitoAuthorizer
+        Put:
+          Type: Api
+          Properties:
+            Path: /lists/{id}
+            RestApiId: !Ref SaveForLaterApi
+            Method: PUT
+            Auth:
+              Authorizer: CognitoAuthorizer
+        Delete:
+          Type: Api
+          Properties:
+            Path: /lists/{id}
+            RestApiId: !Ref SaveForLaterApi
+            Method: DELETE
+            Auth:
+              Authorizer: CognitoAuthorizer
   # TapTrackAdminGetPlaceDetails:
   #   Type: AWS::Serverless::Function
   #   Properties:

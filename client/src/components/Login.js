@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import ConfirmRegister from "./ConfirmRegister";
 import Auth from "@aws-amplify/auth";
 
-const Login = ({ setAuthenticated }) => {
+const Login = ({ setAuthenticated, getLinks }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -19,6 +19,7 @@ const Login = ({ setAuthenticated }) => {
     if (validate()) {
       await Auth.signIn(email, password)
         .then(() => {
+          getLinks()
           setAuthenticated(true);
         })
         .catch((e) => {

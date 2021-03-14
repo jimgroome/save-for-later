@@ -12,7 +12,7 @@ const Settings = ({ settingsModalOpen, setSettingsModalOpen, onSettingsSave, onL
       <form onSubmit={(e) => onSubmit(e)}>
         <MDBModalBody>
           <MDBBtn color="danger" onClick={(e) => onLogoutClick(e)}>
-            Sign outw
+            Sign out
           </MDBBtn>
         </MDBModalBody>
         <MDBModalFooter>

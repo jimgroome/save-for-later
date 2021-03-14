@@ -1,0 +1,1 @@
+clear && sam local start-api --profile windmill -p 3001

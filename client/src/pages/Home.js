@@ -10,6 +10,7 @@ import {
   MDBRow,
 } from "mdbreact";
 import React, { useEffect, useState } from "react";
+import ArchivedLinks from "../components/ArchivedLinks";
 import Links from "../components/Links";
 import apiGatewayCall from "../helpers/apiGatewayCall";
 
@@ -83,12 +84,7 @@ const Home = ({ setLoading, onLogoutClick }) => {
         </MDBCol>
       </MDBRow>
       {archivedLinks && archivedLinks.length > 0 && (
-        <MDBRow>
-          <MDBCol>
-            <h2>Archived links</h2>
-            <Links links={archivedLinks} onDeleteClick={onDeleteClick} />
-          </MDBCol>
-        </MDBRow>
+        <ArchivedLinks links={archivedLinks} />
       )}
       <MDBModal toggle={toggleDeleteModal} isOpen={deleteModalOpen} fade={false}>
         <MDBModalHeader>Confirm archive</MDBModalHeader>
@@ -111,7 +107,7 @@ const Home = ({ setLoading, onLogoutClick }) => {
       </MDBModal>
       <MDBRow>
         <MDBCol>
-          <MDBBtn color="danger" onClick={(e) => onLogoutClick(e)} className="my-4">
+          <MDBBtn color="danger" onClick={(e) => onLogoutClick(e)} className="mb-4">
             Log out
           </MDBBtn>
         </MDBCol>

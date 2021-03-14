@@ -1,7 +1,7 @@
 import React from 'react'
 import Link from './Link'
 
-const Links = ({links, onDeleteClick}) => {
+const Links = ({links, onDeleteClick = null}) => {
     return (
         <table className="table">
         <tbody>

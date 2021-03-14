@@ -15,6 +15,8 @@ import Links from "../components/Links";
 import apiGatewayCall from "../helpers/apiGatewayCall";
 
 const Home = ({ setLoading, onLogoutClick }) => {
+  const [syncing, setSyncing] = useState(false);
+
   const [activeLinks, setActiveLinks] = useState(null);
   const [archivedLinks, setArchivedLinks] = useState(null);
 
@@ -27,15 +29,15 @@ const Home = ({ setLoading, onLogoutClick }) => {
   }, []);
 
   const getLinks = async () => {
-    setLoading(true);
+    setSyncing(true);
     await apiGatewayCall("links", "get")
       .then((data) => {
         setActiveLinks(data.active);
         setArchivedLinks(data.archived);
-        setLoading(false);
+        setSyncing(false);
       })
       .catch((e) => {
-        setLoading(false);
+        setSyncing(false);
         console.log(e);
       });
   };
@@ -67,8 +69,8 @@ const Home = ({ setLoading, onLogoutClick }) => {
         <MDBCol>
           <h1>
             Saved links
-            <MDBBtn color="primary" onClick={(e) => getLinks()} className="float-right">
-              <MDBIcon icon="sync" />
+            <MDBBtn color="primary" onClick={() => getLinks()} className="float-right">
+              <MDBIcon icon="sync" spin={syncing} />
             </MDBBtn>
           </h1>
         </MDBCol>
@@ -83,9 +85,7 @@ const Home = ({ setLoading, onLogoutClick }) => {
             ))}
         </MDBCol>
       </MDBRow>
-      {archivedLinks && archivedLinks.length > 0 && (
-        <ArchivedLinks links={archivedLinks} />
-      )}
+      {archivedLinks && archivedLinks.length > 0 && <ArchivedLinks links={archivedLinks} />}
       <MDBModal toggle={toggleDeleteModal} isOpen={deleteModalOpen} fade={false}>
         <MDBModalHeader>Confirm archive</MDBModalHeader>
         <MDBModalBody>Archive this link?</MDBModalBody>
@@ -107,7 +107,11 @@ const Home = ({ setLoading, onLogoutClick }) => {
       </MDBModal>
       <MDBRow>
         <MDBCol>
-          <MDBBtn color="danger" onClick={(e) => onLogoutClick(e)} className="mb-4">
+          <MDBBtn
+            color="danger"
+            onClick={(e) => onLogoutClick(e)}
+            className={activeLinks && activeLinks.length ? "mb-4" : "my-4"}
+          >
             Log out
           </MDBBtn>
         </MDBCol>

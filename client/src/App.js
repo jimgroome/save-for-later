@@ -14,13 +14,14 @@ function App() {
       await Auth.currentSession()
         .then(() => {
           setAuthenticated(true);
-          setLoading(false);
+          // setSyncing(false);
         })
         .catch((e) => {
-          setLoading(false);
+          // setSyncing(false);
+          console.log(e);
         });
     };
-    setLoading(true);
+    // setSyncing(true);
     getCurrentSession();
     // eslint-disable-next-line
   }, []);

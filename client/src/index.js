@@ -6,8 +6,8 @@ import App from "./App";
 import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 import reportWebVitals from "./reportWebVitals";
 import config from "./config";
-
 import Amplify from "aws-amplify";
+
 Amplify.configure({
   Auth: {
     region: "eu-west-2",

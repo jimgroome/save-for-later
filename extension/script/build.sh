@@ -1,5 +1,3 @@
-#!/bin/bash
-
 build() {
     echo 'building react'
 

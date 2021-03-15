@@ -4,10 +4,12 @@
   "manifest_version": 2,
   "description": "Save links and check them out whenever is convenient for you.",
   "icons": {
-      "512": "logo512.png"
+    "512": "logo512.png"
   },
+  "permissions": ["tabs"],
+
   "browser_action": {
-      "default_icon": "logo512.png",
-      "default_popup": "popup.html"
+    "default_icon": "logo512.png",
+    "default_popup": "popup.html"
   }
 }
